@@ -1,2 +1,285 @@
-# calculadora-co2-transporte-br
-🌍 Calculadora web interativa para cálculo de emissões de CO₂ de diferentes meios de transporte entre cidades brasileiras. Interface responsiva com mapas, gráficos e análise inteligente para decisões sustentáveis.
+# 🌍 Calculadora EcoTransporte Brasil - Emissões de CO₂
+
+<div align="center">
+
+![Status](https://img.shields.io/badge/status-ativo-success?style=for-the-badge)
+![Licença](https://img.shields.io/badge/licen%C3%A7a-MIT-blue?style=for-the-badge)
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+
+**Transformando consciência ambiental em ações sustentáveis**
+
+[✨ Demo Online](https://celloweb-ai.github.io/calculadora-co2-transporte-br/) • [🚀 Funcionalidades](#-funcionalidades) • [🛠️ Tecnologias](#%EF%B8%8F-tecnologias-utilizadas) • [📚 Como Usar](#-como-usar)
+
+</div>
+
+## 🌟 Visão Geral
+
+A **Calculadora EcoTransporte Brasil** é uma aplicação web interativa que permite calcular e comparar as emissões de CO₂ de diferentes meios de transporte entre as principais cidades brasileiras. Desenvolvida com foco em conscientização ambiental, o projeto utiliza dados científicos atualizados para ajudar usuários a tomarem decisões mais sustentáveis em suas viagens.
+
+### 🎯 Objetivos do Projeto
+
+- **Educação Ambiental**: Conscientizar sobre o impacto das escolhas de transporte
+- **Comparação Visual**: Facilitar a comparação entre diferentes modais de transporte
+- **Tomada de Decisão**: Empoderar usuários com informações para escolhas mais verdes
+- **Acessibilidade**: Interface intuitiva sem necessidade de instalação
+
+## 🚀 Funcionalidades
+
+### 📊 Cálculos Avançados
+
+- **8 Modais de Transporte**: Carro gasolina, carro elétrico, carro híbrido, ônibus, trem, avião, bicicleta e motocicleta
+- **Rotas Pré-cadastradas**: Mais de 100 rotas entre 15+ cidades brasileiras
+- **Distância Personalizada**: Informe manualmente ou use o mapa interativo
+- **Múltiplos Passageiros**: Calcule emissões divididas por número de ocupantes
+- **Ida e Volta**: Opção para calcular viagens completas
+- **Frequência Mensal**: Projeção de impacto anual
+
+### 🗺️ Sistema de Mapas Integrado
+
+- **Geolocalização**: Marcadores interativos com arrastar-e-soltar
+- **Cálculo Automático**: Distância calculada via fórmula de Haversine
+- **Visualização de Rota**: Linhas conectadas com feedback visual
+- **Integração Leaflet.js**: Mapa responsivo e leve
+
+### 📊 Visualização de Dados
+
+- **Gráfico Comparativo**: Comparação lado-a-lado de todos os transportes
+- **Gráfico de Evolução**: Projeção de emissões por distância (Chart.js)
+- **Ranking de Sustentabilidade**: Ordenação automática do menos ao mais poluente
+- **Equivalências Ambientais**: Contextualização em árvores, smartphones, energia
+
+### 🤖 Análise Inteligente
+
+- **Feedback Personalizado**: Mensagens baseadas no nível de emissão
+- **Recomendações Práticas**: Sugestões de alternativas sustentáveis
+- **IA Contextual**: Análise em três níveis (Baixo/Moderado/Alto impacto)
+- **Pronto para GPT**: Estrutura preparada para integração com APIs de IA
+
+### 💾 Sistema de Histórico
+
+- **Persistência Local**: Armazenamento via localStorage
+- **CRUD Completo**: Criar, ler, atualizar e deletar registros
+- **Limite Inteligente**: Mantém os 20 cálculos mais recentes
+- **Exportação JSON**: Download de dados para análise externa
+- **Recuperação Rápida**: Reutilize cálculos anteriores com um clique
+
+## 🛠️ Tecnologias Utilizadas
+
+| Camada | Tecnologia | Propósito |
+|--------|-----------|----------|
+| **Frontend** | HTML5 + CSS3 + ES6+ | Estrutura, estilo e lógica |
+| **Visualização** | Chart.js v4.4+ | Gráficos interativos e responsivos |
+| **Mapas** | Leaflet.js 1.9+ | Sistema de geolocalização e rotas |
+| **Armazenamento** | Web Storage API | Persistência local de dados |
+| **Design** | CSS Custom Properties | Sistema de design consistente |
+
+### 🎯 Princípios de Desenvolvimento
+
+- **Clean Code**: Código modular, comentado e reutilizável
+- **Mobile-First**: Design responsivo desde a concepção
+- **Performance**: Carregamento otimizado e execução eficiente
+- **Acessibilidade**: ARIA labels e navegação por teclado
+- **UX Intuitiva**: Fluxos claros e feedback imediato
+- **Zero Dependências**: Funciona diretamente no navegador
+
+## 📚 Estrutura do Projeto
+
+```text
+calculadora-co2-transporte-br/
+├── index.html                 # Ponto de entrada da aplicação
+├── css/
+│   └── style.css              # Estilos completos com variáveis CSS
+├── js/
+│   ├── routes-data.js         # Dados de rotas e cidades
+│   ├── config.js              # Constantes e configurações de CO₂
+│   ├── calculator.js          # Lógica de cálculos de emissões
+│   ├── ui.js                  # Manipulação do DOM e interface
+│   ├── charts.js              # Renderização de gráficos (Chart.js)
+│   ├── maps.js                # Integração com Leaflet.js
+│   ├── storage.js             # Gerenciamento de histórico
+│   └── app.js                 # Inicialização e eventos
+├── LICENSE                     # Licença MIT
+└── README.md                   # Esta documentação
+```
+
+## 📖 Dados de Emissão
+
+### 🔬 Base Científica
+
+Os valores de emissão de CO₂ são baseados em médias da indústria e dados brasileiros atualizados:
+
+| Transporte | Emissão (kg CO₂/km) | Fonte |
+|------------|---------------------|-------|
+| 🚴 Bicicleta | 0.000 | Zero emissões |
+| 🔋 Carro Elétrico | 0.022 | Matriz elétrica brasileira |
+| 🚆 Trem/Metrô | 0.035 | Alta eficiência energética |
+| 🌱 Carro Híbrido | 0.051 | Tecnologia flex + etanol |
+| 🚌 Ônibus | 0.075 | Emissões diluídas |
+| 🛟️ Motocicleta | 0.130 | Baixa ocupação |
+| ✈️ Avião | 0.123 | Queima intensiva |
+| 🚗 Carro Flex/Gasolina | 0.148 | Maior impacto |
+
+*Valores por passageiro. Para carros, a emissão é dividida pelo número de passageiros.*
+
+### 🏙️ Cidades Disponíveis
+
+São Paulo, Rio de Janeiro, Belo Horizonte, Brasília, Curitiba, Porto Alegre, Salvador, Fortaleza, Recife, Manaus, Belém, Goiânia, Campinas, Santos, Florianópolis.
+
+## 🚀 Como Usar
+
+### 🔧 Pré-requisitos
+
+- Navegador moderno (Chrome 90+, Firefox 88+, Safari 14+, Edge 90+)
+- Conexão com internet (para CDNs de Chart.js e Leaflet.js)
+- JavaScript habilitado
+
+### ⚡ Instalação Local
+
+1. **Clone o repositório**
+
+```bash
+git clone https://github.com/celloweb-ai/calculadora-co2-transporte-br.git
+cd calculadora-co2-transporte-br
+```
+
+2. **Abra no navegador**
+
+```bash
+# Opção 1: Abrir diretamente
+open index.html  # macOS
+start index.html # Windows
+xdg-open index.html # Linux
+
+# Opção 2: Servidor local simples (recomendado)
+python -m http.server 8000
+# Acesse: http://localhost:8000
+```
+
+**Nota**: Não há necessidade de instalação de dependências, build ou servidor. O projeto roda diretamente no navegador!
+
+### 🎮 Passo a Passo
+
+1. **Selecione Origem e Destino**: Escolha as cidades ou use o mapa
+2. **Escolha o Transporte**: Clique no card do modal desejado
+3. **Configure Parâmetros**: Ajuste passageiros, frequência, ida/volta
+4. **Calcule**: Clique em "Calcular Emissões"
+5. **Analise**: Visualize gráficos, ranking e recomendações
+6. **Salve**: Armazene no histórico para referência futura
+
+### 💡 Dicas Avançadas
+
+- **Comparação Rápida**: Calcule o mesmo trajeto com diferentes transportes
+- **Análise Mensal**: Use a frequência para projetar impacto anual
+- **Exportação**: Baixe seu histórico em JSON para planilhas
+- **Mapa Interativo**: Arraste os marcadores para ajustar distâncias
+
+## 🌎 Deploy
+
+### 💚 GitHub Pages (Recomendado)
+
+1. Acesse as **Settings** do repositório
+2. Vá em **Pages** no menu lateral
+3. Em **Source**, selecione `main` branch
+4. Salve e aguarde alguns minutos
+5. Seu site estará disponível em: `https://celloweb-ai.github.io/calculadora-co2-transporte-br/`
+
+### 🚀 Outras Opções
+
+- **Netlify**: Arraste a pasta do projeto no [Netlify Drop](https://app.netlify.com/drop)
+- **Vercel**: Conecte o repositório GitHub no [Vercel](https://vercel.com/new)
+- **Firebase Hosting**: `firebase init` + `firebase deploy`
+
+## 🤝 Contribuindo
+
+Contribuições são muito bem-vindas! Se você tem sugestões, correções ou novas funcionalidades:
+
+### 📝 Processo
+
+1. Faça um **Fork** do projeto
+2. Crie uma **Branch** para sua feature (`git checkout -b feature/NovaFuncionalidade`)
+3. **Commit** suas mudanças (`git commit -m 'Adiciona nova funcionalidade X'`)
+4. **Push** para a Branch (`git push origin feature/NovaFuncionalidade`)
+5. Abra um **Pull Request** detalhado
+
+### 🐛 Reportar Bugs
+
+Encontrou um problema? [Abra uma issue](https://github.com/celloweb-ai/calculadora-co2-transporte-br/issues) com:
+- Descrição clara do problema
+- Passos para reproduzir
+- Navegador e versão
+- Screenshots (se aplicável)
+
+### ✨ Sugestões de Contribuição
+
+- Adicionar mais cidades e rotas brasileiras
+- Implementar modo escuro/claro
+- Criar versão PWA (Progressive Web App)
+- Integrar com APIs de rotas reais (Google Maps, OpenStreetMap)
+- Adicionar suporte multi-idioma
+- Implementar compartilhamento em redes sociais
+
+## 🔮 Roadmap Futuro
+
+### 🚀 Próximas Versões
+
+- [ ] **v2.1**: Modo offline completo (PWA)
+- [ ] **v2.2**: Integração com APIs de rotas
+- [ ] **v2.3**: Dashboard com estatísticas agregadas
+- [ ] **v2.4**: Sistema de conquistas e gamificação
+- [ ] **v3.0**: Versão multi-idioma (inglês, espanhol)
+
+## 📜 Licença
+
+Este projeto está sob a licença **MIT**. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
+
+```text
+MIT License © 2026 Marcus Vasconcellos
+
+Permissão é concedida, gratuitamente, a qualquer pessoa que obtenha uma cópia
+deste software e arquivos de documentação associados, para usar, copiar, modificar,
+mesclar, publicar, distribuir, sublicenciar e/ou vender cópias do software.
+```
+
+## 👨‍💻 Autor
+
+**Marcus Vasconcellos**
+
+- 🐙 GitHub: [@celloweb-ai](https://github.com/celloweb-ai)
+- 💔 LinkedIn: [marcusvasconcellos](https://www.linkedin.com/in/marcusvasconcellos)
+- 💼 Empresa: [@Prio3](https://github.com/Prio3)
+- 📧 Email: marcus@vasconcellos.net.br
+- 📍 Localização: Rio de Janeiro, Brasil
+
+### 🎓 Sobre
+
+Engenheiro Eletrônico e de Computação com MBA, mais de 20 anos de experiência em liderança de automação industrial complexa e cibersegurança. Apaixonado por tecnologia sustentável e soluções que geram impacto positivo.
+
+## 🙏 Agradecimentos
+
+- **DIO (Digital Innovation One)** pelo Laboratório de IA Generativa
+- **Comunidade Open Source** por tecnologias fundamentais (Chart.js, Leaflet.js)
+- **IPCC, EPA, ANP** pelos dados científicos de emissões
+- **Usuários e Contribuidores** por feedback e sugestões
+
+## 📢 Suporte e Contato
+
+Tem dúvidas, sugestões ou quer colaborar?
+
+- 🐛 **Issues**: [GitHub Issues](https://github.com/celloweb-ai/calculadora-co2-transporte-br/issues)
+- 💬 **Discussões**: [GitHub Discussions](https://github.com/celloweb-ai/calculadora-co2-transporte-br/discussions)
+- 📧 **Email**: marcus@vasconcellos.net.br
+- 👤 **LinkedIn**: [Marcus Vasconcellos](https://www.linkedin.com/in/marcusvasconcellos)
+
+---
+
+<div align="center">
+
+### 🌟 Se este projeto foi útil, considere dar uma estrela! ⭐
+
+**🌱 Juntos por um planeta mais sustentável, uma viagem de cada vez.**
+
+[⬆️ Voltar ao Topo](#-calculadora-ecotransporte-brasil---emissões-de-co₂)
+
+</div>
