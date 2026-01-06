@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Calculadora de emissões de CO₂ para transporte entre cidades brasileiras. Compare diferentes modais e tome decisões sustentáveis.">
+    <meta name="keywords" content="CO2, emissões, transporte, sustentabilidade, Brasil, calculadora">
+    <meta name="author" content="Marcus Vasconcellos">
+    
+    <title>🌍 Calculadora EcoTransporte Brasil | Emissões de CO₂</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon/favicon-16x16.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/favicon/apple-touch-icon.png">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/style.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <img src="assets/logo.svg" alt="EcoTransporte Logo" class="logo" onerror="this.style.display='none'">
+                <h1>🌍 EcoTransporte Brasil</h1>
+                <p class="subtitle">Calcule e compare emissões de CO₂ no transporte</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            <!-- Seção de Cálculo -->
+            <section class="calculator-section">
+                <h2>📊 Calcular Emissões</h2>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="origin">🏁 Origem</label>
+                        <select id="origin" class="input">
+                            <option value="">Selecione a cidade</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="destination">🎯 Destino</label>
+                        <select id="destination" class="input">
+                            <option value="">Selecione a cidade</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="distance">📏 Distância (km)</label>
+                        <input type="number" id="distance" class="input" placeholder="Automático ou manual" min="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="passengers">👥 Passageiros</label>
+                        <input type="number" id="passengers" class="input" value="1" min="1" max="10">
+                    </div>
+                </div>
+                
+                <!-- Mapa Interativo -->
+                <div class="map-container" id="mapContainer" style="display:none;">
+                    <div id="map"></div>
+                    <button class="btn-secondary" id="closeMap">Fechar Mapa</button>
+                </div>
+                <button class="btn-secondary" id="showMap">🗺️ Usar Mapa Interativo</button>
+                
+                <!-- Opções Adicionais -->
+                <div class="options-grid">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="roundTrip">
+                        <span>Ida e volta</span>
+                    </label>
+                    
+                    <div class="form-group">
+                        <label for="frequency">Frequência mensal</label>
+                        <input type="number" id="frequency" class="input" value="1" min="1" max="30">
+                    </div>
+                </div>
+                
+                <!-- Modais de Transporte -->
+                <h3>🚗 Escolha o Transporte</h3>
+                <div class="transport-grid" id="transportGrid">
+                    <!-- Gerado via JavaScript -->
+                </div>
+                
+                <button class="btn-primary" id="calculateBtn">Calcular Emissões</button>
+            </section>
+            
+            <!-- Seção de Resultados -->
+            <section class="results-section" id="resultsSection" style="display:none;">
+                <h2>📈 Resultados</h2>
+                
+                <div class="result-card" id="mainResult">
+                    <!-- Resultado principal -->
+                </div>
+                
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <canvas id="comparisonChart"></canvas>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="evolutionChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="ranking-container" id="ranking">
+                    <!-- Ranking de sustentabilidade -->
+                </div>
+                
+                <div class="recommendations" id="recommendations">
+                    <!-- Recomendações IA -->
+                </div>
+                
+                <button class="btn-secondary" id="saveHistory">💾 Salvar no Histórico</button>
+            </section>
+            
+            <!-- Seção de Histórico -->
+            <section class="history-section">
+                <h2>📚 Histórico de Cálculos</h2>
+                <div class="history-actions">
+                    <button class="btn-secondary" id="exportHistory">📅 Exportar JSON</button>
+                    <button class="btn-danger" id="clearHistory">🗑️ Limpar Histórico</button>
+                </div>
+                <div id="historyList" class="history-list">
+                    <!-- Lista de histórico -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2026 Marcus Vasconcellos | <a href="https://github.com/celloweb-ai/calculadora-co2-transporte-br">GitHub</a> | Licença MIT</p>
+            <p>🌱 Transformando consciência ambiental em ações sustentáveis</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/routes-data.js"></script>
+    <script src="js/calculator.js"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/maps.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
