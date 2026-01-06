@@ -7,6 +7,25 @@ let comparisonChart = null;
 let evolutionChart = null;
 
 /**
+ * Função principal de renderização (wrapper)
+ * Compatibilidade com app.js
+ */
+function renderCharts(result) {
+    if (!result) {
+        console.error('❌ Nenhum resultado para renderizar gráficos');
+        return;
+    }
+    
+    try {
+        renderComparisonChart(result);
+        renderEvolutionChart(result);
+        console.log('✅ Gráficos renderizados com sucesso');
+    } catch (error) {
+        console.error('❌ Erro ao renderizar gráficos:', error);
+    }
+}
+
+/**
  * Renderiza o gráfico de comparação entre transportes
  */
 function renderComparisonChart(result) {
@@ -383,3 +402,5 @@ function clearAllCharts() {
         evolutionChart = null;
     }
 }
+
+console.log('✅ Charts.js carregado - Funções de gráficos disponíveis');
