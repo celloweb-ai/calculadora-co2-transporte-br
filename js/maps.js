@@ -37,6 +37,8 @@ function initMap() {
 
     // Event listener para cliques no mapa
     map.on('click', onMapClick);
+    
+    console.log('✅ Mapa inicializado');
 }
 
 /**
@@ -48,11 +50,13 @@ function onMapClick(e) {
     // Se não houver marcador de origem, cria um
     if (!originMarker) {
         setOriginMarker(lat, lng);
+        updateFormFieldsFromCoordinates(lat, lng, 'origin');
         showNotification('📍 Origem definida! Clique novamente para definir o destino.', 'info');
     } 
     // Senão, cria marcador de destino
     else if (!destinationMarker) {
         setDestinationMarker(lat, lng);
+        updateFormFieldsFromCoordinates(lat, lng, 'destination');
         calculateDistanceFromMarkers();
         showNotification('🎯 Destino definido! Distância calculada automaticamente.', 'success');
     }
@@ -60,7 +64,41 @@ function onMapClick(e) {
     else {
         clearMapMarkers();
         setOriginMarker(lat, lng);
+        updateFormFieldsFromCoordinates(lat, lng, 'origin');
         showNotification('🔄 Marcadores resetados. Defina o novo destino.', 'info');
+    }
+}
+
+/**
+ * Atualiza os campos do formulário baseado em coordenadas
+ */
+function updateFormFieldsFromCoordinates(lat, lng, type) {
+    if (typeof CITIES === 'undefined') return;
+    
+    // Encontra a cidade mais próxima
+    let closestCity = null;
+    let minDistance = Infinity;
+    
+    for (const [cityId, cityData] of Object.entries(CITIES)) {
+        const distance = calculateHaversineDistance(lat, lng, cityData.lat, cityData.lng);
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestCity = { id: cityId, ...cityData, distance };
+        }
+    }
+    
+    // Se encontrou cidade próxima (menos de 50km), seleciona ela
+    if (closestCity && closestCity.distance < 50) {
+        const selectElement = document.getElementById(type);
+        if (selectElement) {
+            selectElement.value = closestCity.id;
+            
+            // Dispara evento de mudança para atualizar distância
+            const event = new Event('change', { bubbles: true });
+            selectElement.dispatchEvent(event);
+            
+            console.log(`✅ ${type === 'origin' ? 'Origem' : 'Destino'} definida: ${closestCity.name}`);
+        }
     }
 }
 
@@ -89,6 +127,7 @@ function setOriginMarker(lat, lng) {
     // Event listener para arrastar
     originMarker.on('dragend', function(e) {
         const position = e.target.getLatLng();
+        updateFormFieldsFromCoordinates(position.lat, position.lng, 'origin');
         if (destinationMarker) {
             calculateDistanceFromMarkers();
         }
@@ -129,6 +168,7 @@ function setDestinationMarker(lat, lng) {
     // Event listener para arrastar
     destinationMarker.on('dragend', function(e) {
         const position = e.target.getLatLng();
+        updateFormFieldsFromCoordinates(position.lat, position.lng, 'destination');
         if (originMarker) {
             calculateDistanceFromMarkers();
         }
@@ -193,6 +233,7 @@ function calculateDistanceFromMarkers() {
     const distanceInput = document.getElementById('distance');
     if (distanceInput) {
         distanceInput.value = Math.round(distance);
+        console.log(`📏 Distância calculada: ${Math.round(distance)} km`);
     }
 
     // Desenha linha de rota
@@ -262,7 +303,7 @@ function plotCitiesOnMap(cities) {
 
     cities.forEach(city => {
         const marker = L.circleMarker([city.lat, city.lng], {
-            radius: 6,
+            radius: 8,
             fillColor: '#2196F3',
             color: '#fff',
             weight: 2,
@@ -273,23 +314,51 @@ function plotCitiesOnMap(cities) {
         marker.bindPopup(`
             <div class="city-popup">
                 <strong>${city.name}</strong><br>
-                ${city.state}<br>
-                <small>Clique para usar como origem/destino</small>
+                <small>📍 Clique para usar como origem/destino</small>
             </div>
         `);
 
         // Event listener para selecionar cidade
-        marker.on('click', function() {
+        marker.on('click', function(e) {
+            // Previne propagação para não ativar o clique no mapa
+            L.DomEvent.stopPropagation(e);
+            
+            const originSelect = document.getElementById('origin');
+            const destSelect = document.getElementById('destination');
+            
+            // Define origem se não houver marcador
             if (!originMarker) {
                 setOriginMarker(city.lat, city.lng);
-                document.getElementById('origin').value = city.name;
-            } else if (!destinationMarker) {
+                if (originSelect) {
+                    originSelect.value = city.id;
+                    originSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                showNotification(`📍 Origem: ${city.name}`, 'success');
+            } 
+            // Define destino se origem já existe
+            else if (!destinationMarker) {
                 setDestinationMarker(city.lat, city.lng);
-                document.getElementById('destination').value = city.name;
+                if (destSelect) {
+                    destSelect.value = city.id;
+                    destSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
                 calculateDistanceFromMarkers();
+                showNotification(`🎯 Destino: ${city.name}`, 'success');
+            }
+            // Se ambos existem, redefine origem
+            else {
+                clearMapMarkers();
+                setOriginMarker(city.lat, city.lng);
+                if (originSelect) {
+                    originSelect.value = city.id;
+                    originSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+                showNotification(`🔄 Origem redefinida: ${city.name}`, 'info');
             }
         });
     });
+    
+    console.log(`✅ ${cities.length} cidades marcadas no mapa`);
 }
 
 /**
@@ -316,7 +385,9 @@ function clearMapMarkers() {
     }
 
     // Reseta zoom
-    map.setView([-15.7801, -47.9292], 4);
+    if (map) {
+        map.setView([-15.7801, -47.9292], 4);
+    }
 }
 
 /**
@@ -354,6 +425,8 @@ function getUserLocation() {
         return;
     }
 
+    showNotification('📍 Obtendo sua localização...', 'info');
+
     navigator.geolocation.getCurrentPosition(
         function(position) {
             const lat = position.coords.latitude;
@@ -361,10 +434,28 @@ function getUserLocation() {
 
             centerMapOnLocation(lat, lng, 10);
             setOriginMarker(lat, lng);
+            updateFormFieldsFromCoordinates(lat, lng, 'origin');
             showNotification('📍 Localização atual definida como origem!', 'success');
         },
         function(error) {
-            showNotification('⚠️ Erro ao obter localização: ' + error.message, 'error');
+            let errorMsg = 'Erro ao obter localização';
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    errorMsg = 'Permissão de localização negada';
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    errorMsg = 'Localização indisponível';
+                    break;
+                case error.TIMEOUT:
+                    errorMsg = 'Tempo esgotado ao obter localização';
+                    break;
+            }
+            showNotification('⚠️ ' + errorMsg, 'error');
+        },
+        {
+            enableHighAccuracy: true,
+            timeout: 5000,
+            maximumAge: 0
         }
     );
 }
@@ -389,7 +480,8 @@ function addMapControls() {
             btn.style.border = '2px solid rgba(0,0,0,0.2)';
             btn.style.borderRadius = '4px';
 
-            btn.onclick = function() {
+            btn.onclick = function(e) {
+                L.DomEvent.stopPropagation(e);
                 getUserLocation();
             };
 
@@ -413,9 +505,19 @@ function addMapControls() {
             btn.style.border = '2px solid rgba(0,0,0,0.2)';
             btn.style.borderRadius = '4px';
 
-            btn.onclick = function() {
+            btn.onclick = function(e) {
+                L.DomEvent.stopPropagation(e);
                 clearMapMarkers();
-                document.getElementById('distance').value = '';
+                
+                // Limpa selects e distância
+                const originSelect = document.getElementById('origin');
+                const destSelect = document.getElementById('destination');
+                const distanceInput = document.getElementById('distance');
+                
+                if (originSelect) originSelect.value = '';
+                if (destSelect) destSelect.value = '';
+                if (distanceInput) distanceInput.value = '';
+                
                 showNotification('🧹 Marcadores removidos do mapa.', 'info');
             };
 
@@ -432,4 +534,7 @@ function addMapControls() {
 function initializeMapSystem() {
     initMap();
     addMapControls();
+    console.log('✅ Sistema de mapas completo inicializado');
 }
+
+console.log('✅ Maps.js carregado');
