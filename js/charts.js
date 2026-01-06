@@ -1,56 +1,91 @@
-// ============================================
-// CHARTS.JS - Renderização de Gráficos
-// ============================================
-// Módulo responsável por criar e gerenciar visualizações
-// de dados usando Chart.js para comparação de emissões
+/**
+ * CHARTS.JS - Renderização de Gráficos com Chart.js
+ * Calculadora EcoTransporte Brasil
+ */
+
+let comparisonChart = null;
+let evolutionChart = null;
 
 /**
- * Renderiza gráfico de comparação entre diferentes transportes
- * @param {Array} transportData - Array de objetos com {name, emission, color}
+ * Renderiza o gráfico de comparação entre transportes
  */
-function renderComparisonChart(transportData) {
-    const ctx = document.getElementById('comparisonChart');
-    if (!ctx) return;
+function renderComparisonChart(result) {
+    const canvas = document.getElementById('comparisonChart');
+    if (!canvas) return;
 
-    // Destruir gráfico anterior se existir
-    if (window.comparisonChartInstance) {
-        window.comparisonChartInstance.destroy();
+    const ctx = canvas.getContext('2d');
+
+    // Destroi gráfico anterior se existir
+    if (comparisonChart) {
+        comparisonChart.destroy();
     }
 
-    // Ordenar por emissão (do menor para o maior)
-    const sortedData = [...transportData].sort((a, b) => a.emission - b.emission);
+    // Calcula emissões para cada transporte
+    const transportData = [];
+    const labels = [];
+    const colors = [];
+    const icons = [];
 
-    window.comparisonChartInstance = new Chart(ctx, {
+    for (const [key, config] of Object.entries(CO2_EMISSIONS)) {
+        const emission = (config.rate * result.distance * (result.roundTrip ? 2 : 1)) / result.passengers;
+        transportData.push(emission);
+        labels.push(config.name);
+        colors.push(config.color);
+        icons.push(config.icon);
+    }
+
+    // Cria o gráfico de barras
+    comparisonChart = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: sortedData.map(t => t.name),
+            labels: labels,
             datasets: [{
                 label: 'Emissões de CO₂ (kg)',
-                data: sortedData.map(t => t.emission),
-                backgroundColor: sortedData.map(t => t.color || '#4CAF50'),
-                borderColor: sortedData.map(t => t.color || '#388E3C'),
-                borderWidth: 2
+                data: transportData,
+                backgroundColor: colors,
+                borderColor: colors.map(c => c),
+                borderWidth: 2,
+                borderRadius: 8,
+                borderSkipped: false
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
+                title: {
+                    display: true,
+                    text: '📊 Comparação de Emissões por Transporte',
+                    font: {
+                        size: 18,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                },
                 legend: {
                     display: false
                 },
-                title: {
-                    display: true,
-                    text: 'Comparação de Emissões por Transporte',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
-                },
                 tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
                     callbacks: {
+                        title: function(context) {
+                            const index = context[0].dataIndex;
+                            return `${icons[index]} ${labels[index]}`;
+                        },
                         label: function(context) {
-                            return `${context.parsed.y.toFixed(2)} kg CO₂`;
+                            return `Emissão: ${context.parsed.y.toFixed(2)} kg CO₂`;
+                        },
+                        afterLabel: function(context) {
+                            const emission = context.parsed.y;
+                            const trees = (emission / 21).toFixed(1);
+                            return `≈ ${trees} árvores/ano necessárias`;
                         }
                     }
                 }
@@ -60,71 +95,136 @@ function renderComparisonChart(transportData) {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Emissões (kg CO₂)'
+                        text: 'kg CO₂',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(1) + ' kg';
+                        }
+                    }
+                },
+                x: {
+                    grid: {
+                        display: false
+                    },
+                    ticks: {
+                        font: {
+                            size: 11
+                        },
+                        maxRotation: 45,
+                        minRotation: 45
                     }
                 }
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
             }
         }
     });
 }
 
 /**
- * Renderiza gráfico de evolução de emissões por distância
- * @param {Object} transportType - Tipo de transporte selecionado
- * @param {Number} maxDistance - Distância máxima para projeção
+ * Renderiza o gráfico de evolução de emissões por distância
  */
-function renderEvolutionChart(transportType, maxDistance = 1000) {
-    const ctx = document.getElementById('evolutionChart');
-    if (!ctx) return;
+function renderEvolutionChart(result) {
+    const canvas = document.getElementById('evolutionChart');
+    if (!canvas) return;
 
-    // Destruir gráfico anterior se existir
-    if (window.evolutionChartInstance) {
-        window.evolutionChartInstance.destroy();
+    const ctx = canvas.getContext('2d');
+
+    // Destroi gráfico anterior se existir
+    if (evolutionChart) {
+        evolutionChart.destroy();
     }
 
-    // Gerar dados de projeção
+    // Gera dados de evolução (0 a 500 km)
     const distances = [];
-    const emissions = [];
-    const step = maxDistance / 10;
+    const datasets = [];
 
-    for (let i = 0; i <= maxDistance; i += step) {
+    // Cria array de distâncias (0, 50, 100, ..., 500)
+    for (let i = 0; i <= 500; i += 50) {
         distances.push(i);
-        emissions.push(i * transportType.emissionPerKm);
     }
 
-    window.evolutionChartInstance = new Chart(ctx, {
+    // Seleciona transportes mais relevantes para comparação
+    const selectedTransports = ['bicicleta', 'carro_eletrico', 'trem', 'onibus', 'carro_gasolina', 'aviao'];
+
+    selectedTransports.forEach(transportKey => {
+        const config = CO2_EMISSIONS[transportKey];
+        const data = distances.map(d => {
+            return (config.rate * d * (result.roundTrip ? 2 : 1)) / result.passengers;
+        });
+
+        datasets.push({
+            label: config.name,
+            data: data,
+            borderColor: config.color,
+            backgroundColor: config.color + '20',
+            borderWidth: 3,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            pointBackgroundColor: config.color,
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2
+        });
+    });
+
+    // Cria o gráfico de linha
+    evolutionChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: distances.map(d => `${Math.round(d)} km`),
-            datasets: [{
-                label: `${transportType.name} - Emissões`,
-                data: emissions,
-                borderColor: transportType.color || '#2196F3',
-                backgroundColor: transportType.color ? `${transportType.color}33` : '#2196F333',
-                tension: 0.4,
-                fill: true
-            }]
+            labels: distances,
+            datasets: datasets
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: true,
-                    position: 'top'
-                },
                 title: {
                     display: true,
-                    text: 'Projeção de Emissões por Distância',
+                    text: '📈 Evolução de Emissões por Distância',
                     font: {
-                        size: 16,
+                        size: 18,
                         weight: 'bold'
+                    },
+                    padding: 20
+                },
+                legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                        usePointStyle: true,
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
                     }
                 },
                 tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    titleFont: {
+                        size: 14
+                    },
+                    bodyFont: {
+                        size: 13
+                    },
                     callbacks: {
+                        title: function(context) {
+                            return `Distância: ${context[0].label} km`;
+                        },
                         label: function(context) {
-                            return `${context.parsed.y.toFixed(2)} kg CO₂`;
+                            return `${context.dataset.label}: ${context.parsed.y.toFixed(2)} kg CO₂`;
                         }
                     }
                 }
@@ -134,142 +234,127 @@ function renderEvolutionChart(transportType, maxDistance = 1000) {
                     beginAtZero: true,
                     title: {
                         display: true,
-                        text: 'Emissões (kg CO₂)'
+                        text: 'Emissões de CO₂ (kg)',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toFixed(0) + ' kg';
+                        }
                     }
                 },
                 x: {
                     title: {
                         display: true,
-                        text: 'Distância'
-                    }
-                }
-            }
-        }
-    });
-}
-
-/**
- * Renderiza gráfico de pizza para distribuição percentual
- * @param {Array} transportData - Array de objetos com emissões
- */
-function renderPieChart(transportData) {
-    const ctx = document.getElementById('pieChart');
-    if (!ctx) return;
-
-    // Destruir gráfico anterior se existir
-    if (window.pieChartInstance) {
-        window.pieChartInstance.destroy();
-    }
-
-    // Filtrar apenas transportes com emissão > 0
-    const validData = transportData.filter(t => t.emission > 0);
-    
-    window.pieChartInstance = new Chart(ctx, {
-        type: 'pie',
-        data: {
-            labels: validData.map(t => t.name),
-            datasets: [{
-                data: validData.map(t => t.emission),
-                backgroundColor: validData.map(t => t.color || '#4CAF50'),
-                borderColor: '#ffffff',
-                borderWidth: 2
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    position: 'right'
-                },
-                title: {
-                    display: true,
-                    text: 'Distribuição de Emissões',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                            const percentage = ((context.parsed / total) * 100).toFixed(1);
-                            return `${context.label}: ${context.parsed.toFixed(2)} kg (${percentage}%)`;
+                        text: 'Distância (km)',
+                        font: {
+                            size: 12,
+                            weight: 'bold'
                         }
-                    }
-                }
-            }
-        }
-    });
-}
-
-/**
- * Renderiza gráfico de ranking de sustentabilidade
- * @param {Array} transportData - Array de objetos com emissões
- */
-function renderRankingChart(transportData) {
-    const ctx = document.getElementById('rankingChart');
-    if (!ctx) return;
-
-    // Destruir gráfico anterior se existir
-    if (window.rankingChartInstance) {
-        window.rankingChartInstance.destroy();
-    }
-
-    // Ordenar do mais sustentável para o menos
-    const sortedData = [...transportData].sort((a, b) => a.emission - b.emission);
-
-    // Cores do verde (melhor) ao vermelho (pior)
-    const colors = sortedData.map((_, index) => {
-        const ratio = index / (sortedData.length - 1);
-        const r = Math.round(ratio * 220);
-        const g = Math.round((1 - ratio) * 180);
-        return `rgb(${r}, ${g}, 50)`;
-    });
-
-    window.rankingChartInstance = new Chart(ctx, {
-        type: 'horizontalBar',
-        data: {
-            labels: sortedData.map(t => t.name),
-            datasets: [{
-                label: 'Ranking de Sustentabilidade',
-                data: sortedData.map(t => t.emission),
-                backgroundColor: colors,
-                borderColor: colors.map(c => c.replace('rgb', 'rgba').replace(')', ', 0.8)')),
-                borderWidth: 2
-            }]
-        },
-        options: {
-            indexAxis: 'y',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                title: {
-                    display: true,
-                    text: 'Ranking de Sustentabilidade (Menor = Melhor)',
-                    font: {
-                        size: 16,
-                        weight: 'bold'
-                    }
-                },
-                tooltip: {
-                    callbacks: {
-                        label: function(context) {
-                            return `${context.parsed.x.toFixed(2)} kg CO₂`;
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' km';
                         }
                     }
                 }
             },
-            scales: {
-                x: {
-                    beginAtZero: true,
-                    title: {
-                        display: true,
-                        text: 'Emissões (kg CO₂)'
+            interaction: {
+                mode: 'index',
+                intersect: false
+            },
+            animation: {
+                duration: 1000,
+                easing: 'easeInOutQuart'
+            }
+        }
+    });
+}
+
+/**
+ * Renderiza gráfico de pizza para distribuição de emissões
+ */
+function renderDistributionChart(history) {
+    const canvas = document.getElementById('distributionChart');
+    if (!canvas || !history || history.length === 0) return;
+
+    const ctx = canvas.getContext('2d');
+
+    // Agrupa emissões por transporte
+    const transportEmissions = {};
+    const transportColors = {};
+
+    history.forEach(item => {
+        const transportKey = Object.keys(CO2_EMISSIONS).find(key => 
+            CO2_EMISSIONS[key].name === item.transport || key === item.transport
+        );
+        
+        if (transportKey) {
+            if (!transportEmissions[transportKey]) {
+                transportEmissions[transportKey] = 0;
+                transportColors[transportKey] = CO2_EMISSIONS[transportKey].color;
+            }
+            transportEmissions[transportKey] += item.totalEmission;
+        }
+    });
+
+    const labels = Object.keys(transportEmissions).map(key => CO2_EMISSIONS[key].name);
+    const data = Object.values(transportEmissions);
+    const colors = Object.values(transportColors);
+
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: data,
+                backgroundColor: colors,
+                borderColor: '#fff',
+                borderWidth: 3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: '🥧 Distribuição de Emissões por Transporte (Histórico)',
+                    font: {
+                        size: 16,
+                        weight: 'bold'
+                    },
+                    padding: 20
+                },
+                legend: {
+                    position: 'right',
+                    labels: {
+                        padding: 15,
+                        font: {
+                            size: 12
+                        }
+                    }
+                },
+                tooltip: {
+                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    padding: 12,
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.parsed;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = ((value / total) * 100).toFixed(1);
+                            return `${label}: ${value.toFixed(2)} kg CO₂ (${percentage}%)`;
+                        }
                     }
                 }
             }
@@ -278,34 +363,23 @@ function renderRankingChart(transportData) {
 }
 
 /**
- * Limpa todos os gráficos ativos
+ * Atualiza todos os gráficos com novos dados
  */
-function clearAllCharts() {
-    if (window.comparisonChartInstance) {
-        window.comparisonChartInstance.destroy();
-        window.comparisonChartInstance = null;
-    }
-    if (window.evolutionChartInstance) {
-        window.evolutionChartInstance.destroy();
-        window.evolutionChartInstance = null;
-    }
-    if (window.pieChartInstance) {
-        window.pieChartInstance.destroy();
-        window.pieChartInstance = null;
-    }
-    if (window.rankingChartInstance) {
-        window.rankingChartInstance.destroy();
-        window.rankingChartInstance = null;
-    }
+function updateAllCharts(result) {
+    renderComparisonChart(result);
+    renderEvolutionChart(result);
 }
 
-// Exportar funções para uso global
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        renderComparisonChart,
-        renderEvolutionChart,
-        renderPieChart,
-        renderRankingChart,
-        clearAllCharts
-    };
+/**
+ * Limpa todos os gráficos
+ */
+function clearAllCharts() {
+    if (comparisonChart) {
+        comparisonChart.destroy();
+        comparisonChart = null;
+    }
+    if (evolutionChart) {
+        evolutionChart.destroy();
+        evolutionChart = null;
+    }
 }
