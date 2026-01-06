@@ -87,6 +87,9 @@
                     </div>
                 </div>
                 
+                <!-- Campo oculto para transporte selecionado -->
+                <input type="hidden" id="selectedTransport" value="">
+                
                 <!-- Modais de Transporte -->
                 <h3>🚗 Escolha o Transporte</h3>
                 <div class="transport-grid" id="transportGrid">
@@ -97,11 +100,21 @@
             </section>
             
             <!-- Seção de Resultados -->
-            <section class="results-section" id="resultsSection" style="display:none;">
+            <section class="results-section" id="results" style="display:none;">
                 <h2>📈 Resultados</h2>
                 
-                <div class="result-card" id="mainResult">
-                    <!-- Resultado principal -->
+                <div class="result-card">
+                    <div class="emission-total">
+                        <h3>Emissão Total de CO₂</h3>
+                        <p class="emission-value"><span id="totalEmission">0</span> kg</p>
+                    </div>
+                    <div id="tripDetails" class="trip-details">
+                        <!-- Detalhes da viagem -->
+                    </div>
+                </div>
+                
+                <div id="annualEmission" style="display:none;">
+                    <!-- Projeção anual -->
                 </div>
                 
                 <div class="charts-grid">
@@ -113,11 +126,15 @@
                     </div>
                 </div>
                 
-                <div class="ranking-container" id="ranking">
+                <div id="sustainabilityRanking" class="ranking-container">
                     <!-- Ranking de sustentabilidade -->
                 </div>
                 
-                <div class="recommendations" id="recommendations">
+                <div id="environmentalEquivalences">
+                    <!-- Equivalências ambientais -->
+                </div>
+                
+                <div id="recommendations" class="recommendations">
                     <!-- Recomendações IA -->
                 </div>
                 
@@ -140,7 +157,7 @@
 
     <footer class="footer">
         <div class="container">
-            <p>&copy; 2026 Marcus Vasconcellos | <a href="https://github.com/celloweb-ai/calculadora-co2-transporte-br">GitHub</a> | Licença MIT</p>
+            <p>&copy; <span class="current-year">2026</span> Marcus Vasconcellos | <a href="https://github.com/celloweb-ai/calculadora-co2-transporte-br">GitHub</a> | Licença MIT</p>
             <p>🌱 Transformando consciência ambiental em ações sustentáveis</p>
         </div>
     </footer>
