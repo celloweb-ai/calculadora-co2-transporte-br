@@ -4,89 +4,95 @@
  */
 
 /**
- * Inicializa os cards de transporte
+ * Inicializa os cards de transporte com dados corretos do config.js
  */
 function initializeTransportCards() {
     const transportGrid = document.getElementById('transportGrid');
-    if (!transportGrid) return;
+    if (!transportGrid || typeof CO2_EMISSIONS === 'undefined') {
+        console.error('❌ Erro: Elemento transportGrid ou CO2_EMISSIONS não encontrado');
+        return;
+    }
     
-    const transports = [
-        {
-            id: 'bicycle',
-            icon: '🚴',
+    // Mapeamento de IDs para os dados do CO2_EMISSIONS
+    const transportMapping = {
+        'bicicleta': {
+            id: 'bicicleta',
             name: 'Bicicleta',
-            emission: '0 g/km',
-            sustainability: 'Muito Alto'
+            description: 'Zero emissões',
+            sustainability: '🌿 Muito Alto'
         },
-        {
-            id: 'electric-car',
-            icon: '⚡',
+        'carro_eletrico': {
+            id: 'carro_eletrico',
             name: 'Carro Elétrico',
-            emission: '0 g/km',
-            sustainability: 'Muito Alto'
+            description: 'Energia limpa',
+            sustainability: '🌿 Muito Alto'
         },
-        {
-            id: 'train',
-            icon: '🚆',
+        'trem': {
+            id: 'trem',
             name: 'Trem/Metrô',
-            emission: '14 g/km',
-            sustainability: 'Alto'
+            description: 'Transporte eficiente',
+            sustainability: '🌿 Alto'
         },
-        {
-            id: 'hybrid-car',
-            icon: '🚗',
+        'carro_hibrido': {
+            id: 'carro_hibrido',
             name: 'Carro Híbrido',
-            emission: '80 g/km',
-            sustainability: 'Médio'
+            description: 'Motor duplo',
+            sustainability: '🌱 Alto'
         },
-        {
-            id: 'bus',
-            icon: '🚌',
+        'onibus': {
+            id: 'onibus',
             name: 'Ônibus',
-            emission: '89 g/km',
-            sustainability: 'Médio'
+            description: 'Transporte coletivo',
+            sustainability: '🌱 Médio'
         },
-        {
-            id: 'motorcycle',
-            icon: '🏍️',
-            name: 'Motocicleta',
-            emission: '103 g/km',
-            sustainability: 'Médio'
-        },
-        {
-            id: 'car-flex',
-            icon: '🚙',
-            name: 'Carro Flex',
-            emission: '192 g/km',
-            sustainability: 'Baixo'
-        },
-        {
-            id: 'airplane',
-            icon: '✈️',
+        'aviao': {
+            id: 'aviao',
             name: 'Avião',
-            emission: '255 g/km',
-            sustainability: 'Muito Baixo'
+            description: 'Longas distâncias',
+            sustainability: '⚠️ Baixo'
+        },
+        'motocicleta': {
+            id: 'motocicleta',
+            name: 'Motocicleta',
+            description: 'Transporte individual',
+            sustainability: '⚠️ Médio-Baixo'
+        },
+        'carro_gasolina': {
+            id: 'carro_gasolina',
+            name: 'Carro Gasolina',
+            description: 'Combustível fóssil',
+            sustainability: '🛑 Muito Baixo'
         }
-    ];
+    };
     
     transportGrid.innerHTML = '';
     
-    transports.forEach(transport => {
+    // Cria cards baseados nos dados do CO2_EMISSIONS
+    for (const [key, data] of Object.entries(CO2_EMISSIONS)) {
+        const mapping = transportMapping[key];
+        if (!mapping) continue;
+        
         const card = document.createElement('div');
         card.className = 'transport-card';
-        card.setAttribute('data-transport', transport.id);
+        card.setAttribute('data-transport', key);
+        
+        // Converte taxa de kg/km para g/km para exibição
+        const emissionGrams = (data.rate * 1000).toFixed(0);
+        const emissionDisplay = emissionGrams === '0' ? '0 g/km' : `${emissionGrams} g/km`;
         
         card.innerHTML = `
-            <div class="transport-icon">${transport.icon}</div>
-            <div class="transport-name">${transport.name}</div>
-            <div class="transport-emission">${transport.emission}</div>
-            <div class="transport-sustainability">${transport.sustainability}</div>
+            <div class="transport-icon" style="font-size: 2.5rem;">${data.icon}</div>
+            <div class="transport-name" style="font-weight: 600; margin: 8px 0;">${data.name}</div>
+            <div class="transport-emission" style="color: ${data.color}; font-weight: 700; font-size: 1.1rem;">${emissionDisplay}</div>
+            <div class="transport-sustainability" style="font-size: 0.85rem; margin-top: 4px; color: #666;">${mapping.sustainability}</div>
         `;
         
-        card.addEventListener('click', () => selectTransport(transport.id));
+        card.addEventListener('click', () => selectTransport(key));
         
         transportGrid.appendChild(card);
-    });
+    }
+    
+    console.log('✅', Object.keys(CO2_EMISSIONS).length, 'cards de transporte gerados');
 }
 
 /**
@@ -110,7 +116,89 @@ function selectTransport(transportId) {
         selectedTransportInput.value = transportId;
     }
     
-    console.log('✓ Transporte selecionado:', transportId);
+    // Obtém nome do transporte para notificação
+    const transportName = CO2_EMISSIONS[transportId]?.name || transportId;
+    
+    // Exibe notificação visual
+    if (typeof showNotification === 'function') {
+        showNotification(`✅ ${transportName} selecionado`, 'success');
+    }
+    
+    console.log('✅ Transporte selecionado:', transportId, '-', transportName);
+}
+
+/**
+ * Retorna informações detalhadas de um transporte
+ */
+function getTransportInfo(transportId) {
+    if (typeof CO2_EMISSIONS === 'undefined' || !CO2_EMISSIONS[transportId]) {
+        return null;
+    }
+    
+    const data = CO2_EMISSIONS[transportId];
+    const emissionGrams = (data.rate * 1000).toFixed(0);
+    
+    return {
+        id: transportId,
+        name: data.name,
+        icon: data.icon,
+        color: data.color,
+        rate: data.rate,
+        emissionGrams: emissionGrams,
+        emissionDisplay: emissionGrams === '0' ? 'Zero emissões' : `${emissionGrams} g CO₂/km`
+    };
+}
+
+/**
+ * Obtém o card de transporte mais sustentável
+ */
+function getMostSustainableTransport() {
+    if (typeof CO2_EMISSIONS === 'undefined') return null;
+    
+    let minRate = Infinity;
+    let bestTransport = null;
+    
+    for (const [key, data] of Object.entries(CO2_EMISSIONS)) {
+        if (data.rate < minRate) {
+            minRate = data.rate;
+            bestTransport = key;
+        }
+    }
+    
+    return bestTransport;
+}
+
+/**
+ * Obtém o card de transporte menos sustentável
+ */
+function getLeastSustainableTransport() {
+    if (typeof CO2_EMISSIONS === 'undefined') return null;
+    
+    let maxRate = -Infinity;
+    let worstTransport = null;
+    
+    for (const [key, data] of Object.entries(CO2_EMISSIONS)) {
+        if (data.rate > maxRate) {
+            maxRate = data.rate;
+            worstTransport = key;
+        }
+    }
+    
+    return worstTransport;
+}
+
+/**
+ * Destaca o transporte mais sustentável
+ */
+function highlightSustainableOption() {
+    const bestTransport = getMostSustainableTransport();
+    if (!bestTransport) return;
+    
+    const card = document.querySelector(`[data-transport="${bestTransport}"]`);
+    if (card) {
+        card.style.boxShadow = '0 0 20px rgba(76, 175, 80, 0.5)';
+        card.style.border = '3px solid #4CAF50';
+    }
 }
 
 // Inicializa quando o DOM estiver pronto
@@ -119,3 +207,5 @@ if (document.readyState === 'loading') {
 } else {
     initializeTransportCards();
 }
+
+console.log('✅ Transport-UI.js carregado');
