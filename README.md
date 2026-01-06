@@ -14,6 +14,22 @@
 
 </div>
 
+---
+
+## 🖼️ Screenshots
+
+<div align="center">
+
+### 💻 Interface Principal
+
+![Interface Principal](./assets/screenshots/app-interface.jpg)
+
+*Tela de cálculo com seleção de origem, destino e modais de transporte*
+
+</div>
+
+---
+
 ## 🌟 Visão Geral
 
 A **Calculadora EcoTransporte Brasil** é uma aplicação web interativa que permite calcular e comparar as emissões de CO₂ de diferentes meios de transporte entre as principais cidades brasileiras. Desenvolvida com foco em conscientização ambiental, o projeto utiliza dados científicos atualizados para ajudar usuários a tomarem decisões mais sustentáveis em suas viagens.
@@ -42,6 +58,7 @@ A **Calculadora EcoTransporte Brasil** é uma aplicação web interativa que per
 - **Cálculo Automático**: Distância calculada via fórmula de Haversine
 - **Visualização de Rota**: Linhas conectadas com feedback visual
 - **Integração Leaflet.js**: Mapa responsivo e leve
+- **Sincronização Bidirecional**: Seleção no mapa atualiza formulário e vice-versa
 
 ### 📊 Visualização de Dados
 
@@ -61,7 +78,7 @@ A **Calculadora EcoTransporte Brasil** é uma aplicação web interativa que per
 
 - **Persistência Local**: Armazenamento via localStorage
 - **CRUD Completo**: Criar, ler, atualizar e deletar registros
-- **Limite Inteligente**: Mantém os 20 cálculos mais recentes
+- **Limite Inteligente**: Mantém os 50 cálculos mais recentes
 - **Exportação JSON**: Download de dados para análise externa
 - **Recuperação Rápida**: Reutilize cálculos anteriores com um clique
 
@@ -92,14 +109,19 @@ calculadora-co2-transporte-br/
 ├── css/
 │   └── style.css              # Estilos completos com variáveis CSS
 ├── js/
-│   ├── routes-data.js         # Dados de rotas e cidades
-│   ├── config.js              # Constantes e configurações de CO₂
+│   ├── app.js                 # Inicialização e eventos principais
 │   ├── calculator.js          # Lógica de cálculos de emissões
-│   ├── ui.js                  # Manipulação do DOM e interface
 │   ├── charts.js              # Renderização de gráficos (Chart.js)
-│   ├── maps.js                # Integração com Leaflet.js
-│   ├── storage.js             # Gerenciamento de histórico
-│   └── app.js                 # Inicialização e eventos
+│   ├── config.js              # Constantes e taxas de CO₂ cientificamente verificadas
+│   ├── maps.js                # Integração com Leaflet.js + geolocalização
+│   ├── routes-data.js         # 100+ rotas pré-cadastradas entre cidades
+│   ├── storage.js             # Gerenciamento de histórico (localStorage)
+│   ├── transport-ui.js        # Renderização dinâmica de cards de transporte
+│   └── ui.js                  # Manipulação do DOM e interface
+├── assets/
+│   ├── favicon/               # Ícones da aplicação
+│   ├── logo.svg               # Logo EcoTransporte
+│   └── screenshots/           # Capturas de tela
 ├── LICENSE                     # Licença MIT
 └── README.md                   # Esta documentação
 ```
@@ -108,24 +130,34 @@ calculadora-co2-transporte-br/
 
 ### 🔬 Base Científica
 
-Os valores de emissão de CO₂ são baseados em médias da indústria e dados brasileiros atualizados:
+Os valores de emissão de CO₂ são baseados em fontes oficiais e dados brasileiros atualizados:
 
-| Transporte | Emissão (kg CO₂/km) | Fonte |
-|------------|---------------------|-------|
-| 🚴 Bicicleta | 0.000 | Zero emissões |
-| 🔋 Carro Elétrico | 0.022 | Matriz elétrica brasileira |
-| 🚆 Trem/Metrô | 0.035 | Alta eficiência energética |
-| 🌱 Carro Híbrido | 0.051 | Tecnologia flex + etanol |
-| 🚌 Ônibus | 0.075 | Emissões diluídas |
-| 🛟️ Motocicleta | 0.130 | Baixa ocupação |
-| ✈️ Avião | 0.123 | Queima intensiva |
-| 🚗 Carro Flex/Gasolina | 0.148 | Maior impacto |
+| Transporte | Emissão (g CO₂/km) | Sustentabilidade | Fonte |
+|------------|---------------------|------------------|-------|
+| 🚴 Bicicleta | **0** | 🌿 Muito Alto | Zero emissões |
+| 🔋 Carro Elétrico | **22** | 🌿 Muito Alto | Mix energético BR (hidreletricidade) |
+| 🚆 Trem/Metrô | **35** | 🌿 Alto | Transporte elétrico de massa |
+| 🌱 Carro Híbrido | **51** | 🌱 Alto | Motor duplo (elétrico + combustão) |
+| 🚌 Ônibus | **75** | 🌱 Médio | Transporte coletivo (diesel) |
+| ✈️ Avião | **123** | ⚠️ Baixo | Voos domésticos (classe econômica) |
+| 🏍️ Motocicleta | **130** | ⚠️ Médio-Baixo | Motos 150-300cc (gasolina) |
+| 🚗 Carro Gasolina | **148** | 🛑 Muito Baixo | Veículo 1.0-1.4L (flex/gasolina) |
 
-*Valores por passageiro. Para carros, a emissão é dividida pelo número de passageiros.*
+**Fontes de Dados:**
+- 🌐 IPCC (Intergovernmental Panel on Climate Change)
+- 🌍 DEFRA (UK Department for Environment, Food & Rural Affairs) 2024
+- 🇧🇷 Ministério do Meio Ambiente (Brasil)
+- ⚡ EPE - Empresa de Pesquisa Energética (Balanço Energético Nacional)
 
-### 🏙️ Cidades Disponíveis
+*⚠️ Valores por passageiro. Para veículos, a emissão é dividida pelo número de passageiros.*
 
-São Paulo, Rio de Janeiro, Belo Horizonte, Brasília, Curitiba, Porto Alegre, Salvador, Fortaleza, Recife, Manaus, Belém, Goiânia, Campinas, Santos, Florianópolis.
+### 🏛️ Cidades Disponíveis
+
+**15 Principais Cidades Brasileiras:**
+
+São Paulo • Rio de Janeiro • Belo Horizonte • Brasília • Curitiba • Porto Alegre • Salvador • Fortaleza • Recife • Manaus • Belém • Goiânia • Campinas • Santos • Florianópolis
+
+**Mais de 100 rotas pré-cadastradas** com distâncias reais entre cidades.
 
 ## 🚀 Como Usar
 
@@ -161,7 +193,7 @@ python -m http.server 8000
 
 ### 🎮 Passo a Passo
 
-1. **Selecione Origem e Destino**: Escolha as cidades ou use o mapa
+1. **Selecione Origem e Destino**: Escolha as cidades nos dropdowns ou clique no mapa
 2. **Escolha o Transporte**: Clique no card do modal desejado
 3. **Configure Parâmetros**: Ajuste passageiros, frequência, ida/volta
 4. **Calcule**: Clique em "Calcular Emissões"
@@ -174,6 +206,7 @@ python -m http.server 8000
 - **Análise Mensal**: Use a frequência para projetar impacto anual
 - **Exportação**: Baixe seu histórico em JSON para planilhas
 - **Mapa Interativo**: Arraste os marcadores para ajustar distâncias
+- **Clique nas Cidades**: Selecione origem e destino clicando diretamente no mapa
 
 ## 🌎 Deploy
 
@@ -260,7 +293,7 @@ Engenheiro Eletrônico e de Computação com MBA, mais de 20 anos de experiênci
 
 - **DIO (Digital Innovation One)** pelo Laboratório de IA Generativa
 - **Comunidade Open Source** por tecnologias fundamentais (Chart.js, Leaflet.js)
-- **IPCC, EPA, ANP** pelos dados científicos de emissões
+- **IPCC, EPA, DEFRA, ANP** pelos dados científicos de emissões
 - **Usuários e Contribuidores** por feedback e sugestões
 
 ## 📢 Suporte e Contato
