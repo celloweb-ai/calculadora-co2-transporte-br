@@ -8,6 +8,8 @@ let originMarker = null;
 let destinationMarker = null;
 let routeLine = null;
 let markersGroup = null;
+let selectedOriginId = null;
+let selectedDestinationId = null;
 
 /**
  * Inicializa o mapa Leaflet
@@ -93,19 +95,63 @@ function updateFormFieldsFromCoordinates(lat, lng, type) {
         if (selectElement) {
             selectElement.value = closestCity.id;
             
+            // Armazena ID selecionado
+            if (type === 'origin') {
+                selectedOriginId = closestCity.id;
+            } else {
+                selectedDestinationId = closestCity.id;
+            }
+            
             // Dispara evento de mudança para atualizar distância
             const event = new Event('change', { bubbles: true });
             selectElement.dispatchEvent(event);
             
-            console.log(`✅ ${type === 'origin' ? 'Origem' : 'Destino'} definida: ${closestCity.name}`);
+            console.log(`✅ ${type === 'origin' ? 'Origem' : 'Destino'} definida: ${closestCity.name} (${closestCity.id})`);
         }
     }
 }
 
 /**
+ * Atualiza formulário usando IDs de cidades
+ */
+function updateFormWithCityIds(originId, destinationId) {
+    if (!originId || !destinationId) return;
+    
+    // Atualiza selects
+    const originSelect = document.getElementById('origin');
+    const destSelect = document.getElementById('destination');
+    
+    if (originSelect && originId) {
+        originSelect.value = originId;
+        selectedOriginId = originId;
+    }
+    
+    if (destSelect && destinationId) {
+        destSelect.value = destinationId;
+        selectedDestinationId = destinationId;
+    }
+    
+    // Atualiza distância usando função de rotas
+    if (typeof getRouteDistance === 'function') {
+        const distance = getRouteDistance(originId, destinationId);
+        if (distance) {
+            const distanceInput = document.getElementById('distance');
+            if (distanceInput) {
+                distanceInput.value = distance;
+                console.log(`📏 Distância ${CITIES[originId].name} → ${CITIES[destinationId].name}: ${distance} km`);
+            }
+        }
+    }
+    
+    // Dispara eventos de mudança
+    if (originSelect) originSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    if (destSelect) destSelect.dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+/**
  * Define marcador de origem
  */
-function setOriginMarker(lat, lng) {
+function setOriginMarker(lat, lng, cityId = null) {
     if (originMarker) {
         markersGroup.removeLayer(originMarker);
     }
@@ -123,6 +169,11 @@ function setOriginMarker(lat, lng) {
         draggable: true,
         title: 'Origem (arraste para mover)'
     }).addTo(markersGroup);
+    
+    // Armazena cityId se fornecido
+    if (cityId) {
+        selectedOriginId = cityId;
+    }
 
     // Event listener para arrastar
     originMarker.on('dragend', function(e) {
@@ -134,11 +185,12 @@ function setOriginMarker(lat, lng) {
     });
 
     // Popup com informações
+    const cityName = cityId && CITIES[cityId] ? CITIES[cityId].name : 'Ponto Personalizado';
     originMarker.bindPopup(`
         <div class="marker-popup">
-            <strong>📍 Ponto de Origem</strong><br>
-            Lat: ${lat.toFixed(4)}<br>
-            Lng: ${lng.toFixed(4)}
+            <strong>📍 Origem</strong><br>
+            ${cityName}<br>
+            <small>Lat: ${lat.toFixed(4)} | Lng: ${lng.toFixed(4)}</small>
         </div>
     `);
 }
@@ -146,7 +198,7 @@ function setOriginMarker(lat, lng) {
 /**
  * Define marcador de destino
  */
-function setDestinationMarker(lat, lng) {
+function setDestinationMarker(lat, lng, cityId = null) {
     if (destinationMarker) {
         markersGroup.removeLayer(destinationMarker);
     }
@@ -164,6 +216,11 @@ function setDestinationMarker(lat, lng) {
         draggable: true,
         title: 'Destino (arraste para mover)'
     }).addTo(markersGroup);
+    
+    // Armazena cityId se fornecido
+    if (cityId) {
+        selectedDestinationId = cityId;
+    }
 
     // Event listener para arrastar
     destinationMarker.on('dragend', function(e) {
@@ -175,11 +232,12 @@ function setDestinationMarker(lat, lng) {
     });
 
     // Popup com informações
+    const cityName = cityId && CITIES[cityId] ? CITIES[cityId].name : 'Ponto Personalizado';
     destinationMarker.bindPopup(`
         <div class="marker-popup">
-            <strong>🎯 Ponto de Destino</strong><br>
-            Lat: ${lat.toFixed(4)}<br>
-            Lng: ${lng.toFixed(4)}
+            <strong>🎯 Destino</strong><br>
+            ${cityName}<br>
+            <small>Lat: ${lat.toFixed(4)} | Lng: ${lng.toFixed(4)}</small>
         </div>
     `);
 }
@@ -223,17 +281,30 @@ function calculateDistanceFromMarkers() {
 
     const origin = originMarker.getLatLng();
     const destination = destinationMarker.getLatLng();
-
-    const distance = calculateHaversineDistance(
-        origin.lat, origin.lng,
-        destination.lat, destination.lng
-    );
+    
+    let distance;
+    
+    // Se temos IDs de cidades, usa distância das rotas
+    if (selectedOriginId && selectedDestinationId && typeof getRouteDistance === 'function') {
+        const routeDistance = getRouteDistance(selectedOriginId, selectedDestinationId);
+        if (routeDistance) {
+            distance = routeDistance;
+            console.log(`📏 Usando distância da rota cadastrada: ${distance} km`);
+        } else {
+            // Fallback para Haversine
+            distance = calculateHaversineDistance(origin.lat, origin.lng, destination.lat, destination.lng);
+            console.log(`📏 Calculado via Haversine: ${Math.round(distance)} km`);
+        }
+    } else {
+        // Calcula via Haversine
+        distance = calculateHaversineDistance(origin.lat, origin.lng, destination.lat, destination.lng);
+        console.log(`📏 Calculado via Haversine: ${Math.round(distance)} km`);
+    }
 
     // Atualiza campo de distância no formulário
     const distanceInput = document.getElementById('distance');
     if (distanceInput) {
         distanceInput.value = Math.round(distance);
-        console.log(`📏 Distância calculada: ${Math.round(distance)} km`);
     }
 
     // Desenha linha de rota
@@ -323,36 +394,60 @@ function plotCitiesOnMap(cities) {
             // Previne propagação para não ativar o clique no mapa
             L.DomEvent.stopPropagation(e);
             
-            const originSelect = document.getElementById('origin');
-            const destSelect = document.getElementById('destination');
-            
             // Define origem se não houver marcador
             if (!originMarker) {
-                setOriginMarker(city.lat, city.lng);
+                setOriginMarker(city.lat, city.lng, city.id);
+                
+                // Atualiza select de origem
+                const originSelect = document.getElementById('origin');
                 if (originSelect) {
                     originSelect.value = city.id;
                     originSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 }
+                
                 showNotification(`📍 Origem: ${city.name}`, 'success');
             } 
             // Define destino se origem já existe
             else if (!destinationMarker) {
-                setDestinationMarker(city.lat, city.lng);
+                setDestinationMarker(city.lat, city.lng, city.id);
+                
+                // Atualiza select de destino
+                const destSelect = document.getElementById('destination');
                 if (destSelect) {
                     destSelect.value = city.id;
                     destSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 }
+                
+                // Atualiza formulário completo com distância
+                updateFormWithCityIds(selectedOriginId, city.id);
+                
+                // Calcula distância
                 calculateDistanceFromMarkers();
+                
                 showNotification(`🎯 Destino: ${city.name}`, 'success');
             }
             // Se ambos existem, redefine origem
             else {
                 clearMapMarkers();
-                setOriginMarker(city.lat, city.lng);
+                setOriginMarker(city.lat, city.lng, city.id);
+                
+                // Atualiza select de origem
+                const originSelect = document.getElementById('origin');
                 if (originSelect) {
                     originSelect.value = city.id;
                     originSelect.dispatchEvent(new Event('change', { bubbles: true }));
                 }
+                
+                // Limpa destino
+                const destSelect = document.getElementById('destination');
+                if (destSelect) {
+                    destSelect.value = '';
+                }
+                const distanceInput = document.getElementById('distance');
+                if (distanceInput) {
+                    distanceInput.value = '';
+                }
+                
                 showNotification(`🔄 Origem redefinida: ${city.name}`, 'info');
             }
         });
@@ -368,10 +463,12 @@ function clearMapMarkers() {
     if (originMarker) {
         markersGroup.removeLayer(originMarker);
         originMarker = null;
+        selectedOriginId = null;
     }
     if (destinationMarker) {
         markersGroup.removeLayer(destinationMarker);
         destinationMarker = null;
+        selectedDestinationId = null;
     }
     if (routeLine) {
         markersGroup.removeLayer(routeLine);
@@ -410,8 +507,8 @@ function plotRoute(originCity, destCity, routes) {
     const destination = routes[destCity];
 
     if (origin && destination) {
-        setOriginMarker(origin.lat, origin.lng);
-        setDestinationMarker(destination.lat, destination.lng);
+        setOriginMarker(origin.lat, origin.lng, originCity);
+        setDestinationMarker(destination.lat, destination.lng, destCity);
         calculateDistanceFromMarkers();
     }
 }
@@ -518,7 +615,7 @@ function addMapControls() {
                 if (destSelect) destSelect.value = '';
                 if (distanceInput) distanceInput.value = '';
                 
-                showNotification('🧹 Marcadores removidos do mapa.', 'info');
+                showNotification('🧹 Marcadores e formulário limpos.', 'info');
             };
 
             return btn;
