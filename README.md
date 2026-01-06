@@ -22,7 +22,7 @@
 
 ### 💻 Interface Principal
 
-![Interface Principal](./assets/screenshots/app-interface.jpg)
+![Interface Principal](./assets/screenshots/app-interface.png)
 
 *Tela de cálculo com seleção de origem, destino e modais de transporte*
 
