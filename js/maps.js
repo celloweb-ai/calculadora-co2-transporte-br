@@ -1,184 +1,220 @@
-// ============================================
-// MAPS.JS - Integração com Leaflet.js
-// ============================================
-// Módulo responsável por gerenciar mapas interativos
-// para seleção de rotas e cálculo de distâncias
+/**
+ * MAPS.JS - Integração com Leaflet.js
+ * Calculadora EcoTransporte Brasil
+ */
 
 let map = null;
 let originMarker = null;
 let destinationMarker = null;
 let routeLine = null;
+let markersGroup = null;
 
 /**
- * Inicializa o mapa com configurações padrão
- * @param {String} containerId - ID do elemento HTML do mapa
+ * Inicializa o mapa Leaflet
  */
-function initializeMap(containerId = 'map') {
-    if (map) {
-        map.remove();
-    }
+function initMap() {
+    const mapContainer = document.getElementById('map');
+    if (!mapContainer) return;
 
-    // Centro do Brasil (Brasília)
-    const brazilCenter = [-15.7801, -47.9292];
-    
-    map = L.map(containerId, {
-        center: brazilCenter,
-        zoom: 4,
-        minZoom: 3,
-        maxZoom: 18,
-        zoomControl: true
-    });
+    // Cria o mapa centrado no Brasil
+    map = L.map('map').setView([-15.7801, -47.9292], 4);
 
-    // Adicionar camada de tiles do OpenStreetMap
+    // Adiciona camada de tiles do OpenStreetMap
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 18
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 18,
+        minZoom: 3
     }).addTo(map);
 
-    // Adicionar controle de escala
+    // Cria grupo de marcadores
+    markersGroup = L.layerGroup().addTo(map);
+
+    // Adiciona controle de escala
     L.control.scale({
         imperial: false,
         metric: true
     }).addTo(map);
 
-    return map;
+    // Event listener para cliques no mapa
+    map.on('click', onMapClick);
 }
 
 /**
- * Adiciona marcador de origem no mapa
- * @param {Array} coordinates - [latitude, longitude]
- * @param {String} label - Rótulo do marcador
+ * Manipula cliques no mapa
  */
-function setOriginMarker(coordinates, label = 'Origem') {
+function onMapClick(e) {
+    const { lat, lng } = e.latlng;
+    
+    // Se não houver marcador de origem, cria um
+    if (!originMarker) {
+        setOriginMarker(lat, lng);
+        showNotification('📍 Origem definida! Clique novamente para definir o destino.', 'info');
+    } 
+    // Senão, cria marcador de destino
+    else if (!destinationMarker) {
+        setDestinationMarker(lat, lng);
+        calculateDistanceFromMarkers();
+        showNotification('🎯 Destino definido! Distância calculada automaticamente.', 'success');
+    }
+    // Se ambos já existem, limpa e recomeça
+    else {
+        clearMapMarkers();
+        setOriginMarker(lat, lng);
+        showNotification('🔄 Marcadores resetados. Defina o novo destino.', 'info');
+    }
+}
+
+/**
+ * Define marcador de origem
+ */
+function setOriginMarker(lat, lng) {
     if (originMarker) {
-        map.removeLayer(originMarker);
+        markersGroup.removeLayer(originMarker);
     }
 
-    originMarker = L.marker(coordinates, {
+    // Ícone personalizado de origem
+    const originIcon = L.divIcon({
+        className: 'custom-marker origin-marker',
+        html: '<div class="marker-pin" style="background-color: #4CAF50;"><span>📍</span></div>',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40]
+    });
+
+    originMarker = L.marker([lat, lng], {
+        icon: originIcon,
         draggable: true,
-        icon: L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        })
-    }).addTo(map);
+        title: 'Origem (arraste para mover)'
+    }).addTo(markersGroup);
 
-    originMarker.bindPopup(`<b>${label}</b>`).openPopup();
-
-    // Evento ao arrastar marcador
+    // Event listener para arrastar
     originMarker.on('dragend', function(e) {
-        const newPos = e.target.getLatLng();
-        updateRoute();
-        if (typeof onMarkerDragEnd === 'function') {
-            onMarkerDragEnd('origin', [newPos.lat, newPos.lng]);
+        const position = e.target.getLatLng();
+        if (destinationMarker) {
+            calculateDistanceFromMarkers();
         }
     });
 
-    return originMarker;
+    // Popup com informações
+    originMarker.bindPopup(`
+        <div class="marker-popup">
+            <strong>📍 Ponto de Origem</strong><br>
+            Lat: ${lat.toFixed(4)}<br>
+            Lng: ${lng.toFixed(4)}
+        </div>
+    `);
 }
 
 /**
- * Adiciona marcador de destino no mapa
- * @param {Array} coordinates - [latitude, longitude]
- * @param {String} label - Rótulo do marcador
+ * Define marcador de destino
  */
-function setDestinationMarker(coordinates, label = 'Destino') {
+function setDestinationMarker(lat, lng) {
     if (destinationMarker) {
-        map.removeLayer(destinationMarker);
+        markersGroup.removeLayer(destinationMarker);
     }
 
-    destinationMarker = L.marker(coordinates, {
+    // Ícone personalizado de destino
+    const destIcon = L.divIcon({
+        className: 'custom-marker destination-marker',
+        html: '<div class="marker-pin" style="background-color: #F44336;"><span>🎯</span></div>',
+        iconSize: [40, 40],
+        iconAnchor: [20, 40]
+    });
+
+    destinationMarker = L.marker([lat, lng], {
+        icon: destIcon,
         draggable: true,
-        icon: L.icon({
-            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-            iconSize: [25, 41],
-            iconAnchor: [12, 41],
-            popupAnchor: [1, -34],
-            shadowSize: [41, 41]
-        })
-    }).addTo(map);
+        title: 'Destino (arraste para mover)'
+    }).addTo(markersGroup);
 
-    destinationMarker.bindPopup(`<b>${label}</b>`).openPopup();
-
-    // Evento ao arrastar marcador
+    // Event listener para arrastar
     destinationMarker.on('dragend', function(e) {
-        const newPos = e.target.getLatLng();
-        updateRoute();
-        if (typeof onMarkerDragEnd === 'function') {
-            onMarkerDragEnd('destination', [newPos.lat, newPos.lng]);
+        const position = e.target.getLatLng();
+        if (originMarker) {
+            calculateDistanceFromMarkers();
         }
     });
 
-    return destinationMarker;
+    // Popup com informações
+    destinationMarker.bindPopup(`
+        <div class="marker-popup">
+            <strong>🎯 Ponto de Destino</strong><br>
+            Lat: ${lat.toFixed(4)}<br>
+            Lng: ${lng.toFixed(4)}
+        </div>
+    `);
 }
 
 /**
  * Desenha linha de rota entre origem e destino
  */
-function updateRoute() {
+function drawRouteLine() {
     if (!originMarker || !destinationMarker) return;
 
-    // Remover linha anterior
+    // Remove linha anterior se existir
     if (routeLine) {
-        map.removeLayer(routeLine);
+        markersGroup.removeLayer(routeLine);
     }
 
-    const originPos = originMarker.getLatLng();
-    const destPos = destinationMarker.getLatLng();
+    const originLatLng = originMarker.getLatLng();
+    const destLatLng = destinationMarker.getLatLng();
 
-    // Criar linha de rota
+    // Cria linha pontilhada conectando os pontos
     routeLine = L.polyline(
-        [[originPos.lat, originPos.lng], [destPos.lat, destPos.lng]],
+        [originLatLng, destLatLng],
         {
             color: '#2196F3',
             weight: 3,
             opacity: 0.7,
-            dashArray: '10, 10'
+            dashArray: '10, 10',
+            lineJoin: 'round'
         }
-    ).addTo(map);
+    ).addTo(markersGroup);
 
-    // Calcular distância
-    const distance = calculateDistance(
-        [originPos.lat, originPos.lng],
-        [destPos.lat, destPos.lng]
-    );
-
-    // Adicionar popup com distância no meio da linha
-    const midpoint = [
-        (originPos.lat + destPos.lat) / 2,
-        (originPos.lng + destPos.lng) / 2
-    ];
-
-    routeLine.bindPopup(`<b>Distância:</b> ${distance.toFixed(2)} km`);
-
-    // Ajustar zoom para mostrar toda a rota
-    const bounds = L.latLngBounds([originPos, destPos]);
+    // Ajusta zoom para mostrar ambos os pontos
+    const bounds = L.latLngBounds([originLatLng, destLatLng]);
     map.fitBounds(bounds, { padding: [50, 50] });
-
-    return distance;
 }
 
 /**
- * Calcula distância entre dois pontos usando fórmula de Haversine
- * @param {Array} coord1 - [latitude, longitude]
- * @param {Array} coord2 - [latitude, longitude]
- * @returns {Number} Distância em quilômetros
+ * Calcula distância entre os marcadores usando fórmula de Haversine
  */
-function calculateDistance(coord1, coord2) {
-    const R = 6371; // Raio da Terra em km
-    const lat1 = coord1[0] * Math.PI / 180;
-    const lat2 = coord2[0] * Math.PI / 180;
-    const deltaLat = (coord2[0] - coord1[0]) * Math.PI / 180;
-    const deltaLng = (coord2[1] - coord1[1]) * Math.PI / 180;
+function calculateDistanceFromMarkers() {
+    if (!originMarker || !destinationMarker) return;
 
-    const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
-              Math.cos(lat1) * Math.cos(lat2) *
-              Math.sin(deltaLng / 2) * Math.sin(deltaLng / 2);
-    
+    const origin = originMarker.getLatLng();
+    const destination = destinationMarker.getLatLng();
+
+    const distance = calculateHaversineDistance(
+        origin.lat, origin.lng,
+        destination.lat, destination.lng
+    );
+
+    // Atualiza campo de distância no formulário
+    const distanceInput = document.getElementById('distance');
+    if (distanceInput) {
+        distanceInput.value = Math.round(distance);
+    }
+
+    // Desenha linha de rota
+    drawRouteLine();
+
+    // Mostra badge com distância
+    showDistanceBadge(distance);
+}
+
+/**
+ * Calcula distância usando fórmula de Haversine
+ */
+function calculateHaversineDistance(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Raio da Terra em km
+    const dLat = toRadians(lat2 - lat1);
+    const dLon = toRadians(lon2 - lon1);
+
+    const a = 
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const distance = R * c;
 
@@ -186,131 +222,214 @@ function calculateDistance(coord1, coord2) {
 }
 
 /**
- * Define rota completa com origem e destino
- * @param {Object} origin - {coordinates: [lat, lng], name: string}
- * @param {Object} destination - {coordinates: [lat, lng], name: string}
+ * Converte graus para radianos
  */
-function setRoute(origin, destination) {
-    if (!map) {
-        initializeMap();
+function toRadians(degrees) {
+    return degrees * (Math.PI / 180);
+}
+
+/**
+ * Mostra badge com distância calculada
+ */
+function showDistanceBadge(distance) {
+    // Remove badge anterior se existir
+    const existingBadge = document.querySelector('.distance-badge');
+    if (existingBadge) {
+        existingBadge.remove();
     }
 
-    setOriginMarker(origin.coordinates, origin.name);
-    setDestinationMarker(destination.coordinates, destination.name);
-    
-    return updateRoute();
+    // Cria novo badge
+    const badge = document.createElement('div');
+    badge.className = 'distance-badge';
+    badge.innerHTML = `
+        <div class="badge-content">
+            <span class="badge-icon">📏</span>
+            <span class="badge-text">${Math.round(distance)} km</span>
+        </div>
+    `;
+
+    const mapContainer = document.getElementById('map');
+    if (mapContainer) {
+        mapContainer.appendChild(badge);
+    }
+}
+
+/**
+ * Marca cidades no mapa baseado em rotas pré-cadastradas
+ */
+function plotCitiesOnMap(cities) {
+    if (!map || !cities) return;
+
+    cities.forEach(city => {
+        const marker = L.circleMarker([city.lat, city.lng], {
+            radius: 6,
+            fillColor: '#2196F3',
+            color: '#fff',
+            weight: 2,
+            opacity: 1,
+            fillOpacity: 0.8
+        }).addTo(markersGroup);
+
+        marker.bindPopup(`
+            <div class="city-popup">
+                <strong>${city.name}</strong><br>
+                ${city.state}<br>
+                <small>Clique para usar como origem/destino</small>
+            </div>
+        `);
+
+        // Event listener para selecionar cidade
+        marker.on('click', function() {
+            if (!originMarker) {
+                setOriginMarker(city.lat, city.lng);
+                document.getElementById('origin').value = city.name;
+            } else if (!destinationMarker) {
+                setDestinationMarker(city.lat, city.lng);
+                document.getElementById('destination').value = city.name;
+                calculateDistanceFromMarkers();
+            }
+        });
+    });
 }
 
 /**
  * Limpa todos os marcadores e linhas do mapa
  */
-function clearMap() {
+function clearMapMarkers() {
     if (originMarker) {
-        map.removeLayer(originMarker);
+        markersGroup.removeLayer(originMarker);
         originMarker = null;
     }
     if (destinationMarker) {
-        map.removeLayer(destinationMarker);
+        markersGroup.removeLayer(destinationMarker);
         destinationMarker = null;
     }
     if (routeLine) {
-        map.removeLayer(routeLine);
+        markersGroup.removeLayer(routeLine);
         routeLine = null;
+    }
+
+    // Remove badge de distância
+    const badge = document.querySelector('.distance-badge');
+    if (badge) {
+        badge.remove();
+    }
+
+    // Reseta zoom
+    map.setView([-15.7801, -47.9292], 4);
+}
+
+/**
+ * Centraliza mapa em uma localização específica
+ */
+function centerMapOnLocation(lat, lng, zoom = 8) {
+    if (!map) return;
+    map.setView([lat, lng], zoom);
+}
+
+/**
+ * Marca rota pré-definida no mapa
+ */
+function plotRoute(originCity, destCity, routes) {
+    if (!map || !routes) return;
+
+    clearMapMarkers();
+
+    const origin = routes[originCity];
+    const destination = routes[destCity];
+
+    if (origin && destination) {
+        setOriginMarker(origin.lat, origin.lng);
+        setDestinationMarker(destination.lat, destination.lng);
+        calculateDistanceFromMarkers();
     }
 }
 
 /**
- * Adiciona múltiplos marcadores ao mapa
- * @param {Array} locations - Array de objetos {coordinates, name, type}
+ * Obtém localização atual do usuário
  */
-function addMultipleMarkers(locations) {
-    const markers = [];
-    
-    locations.forEach(location => {
-        const marker = L.marker(location.coordinates).addTo(map);
-        marker.bindPopup(`<b>${location.name}</b>`);
-        markers.push(marker);
+function getUserLocation() {
+    if (!navigator.geolocation) {
+        showNotification('⚠️ Geolocalização não suportada pelo navegador.', 'error');
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        function(position) {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            centerMapOnLocation(lat, lng, 10);
+            setOriginMarker(lat, lng);
+            showNotification('📍 Localização atual definida como origem!', 'success');
+        },
+        function(error) {
+            showNotification('⚠️ Erro ao obter localização: ' + error.message, 'error');
+        }
+    );
+}
+
+/**
+ * Adiciona controle personalizado ao mapa
+ */
+function addMapControls() {
+    if (!map) return;
+
+    // Botão de localização atual
+    const LocationControl = L.Control.extend({
+        onAdd: function() {
+            const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
+            btn.innerHTML = '📍';
+            btn.title = 'Usar minha localização';
+            btn.style.backgroundColor = 'white';
+            btn.style.width = '34px';
+            btn.style.height = '34px';
+            btn.style.fontSize = '18px';
+            btn.style.cursor = 'pointer';
+            btn.style.border = '2px solid rgba(0,0,0,0.2)';
+            btn.style.borderRadius = '4px';
+
+            btn.onclick = function() {
+                getUserLocation();
+            };
+
+            return btn;
+        }
     });
 
-    // Ajustar zoom para mostrar todos os marcadores
-    if (markers.length > 0) {
-        const group = L.featureGroup(markers);
-        map.fitBounds(group.getBounds(), { padding: [30, 30] });
-    }
+    new LocationControl({ position: 'topleft' }).addTo(map);
 
-    return markers;
+    // Botão de limpar marcadores
+    const ClearControl = L.Control.extend({
+        onAdd: function() {
+            const btn = L.DomUtil.create('button', 'leaflet-bar leaflet-control leaflet-control-custom');
+            btn.innerHTML = '🗑️';
+            btn.title = 'Limpar marcadores';
+            btn.style.backgroundColor = 'white';
+            btn.style.width = '34px';
+            btn.style.height = '34px';
+            btn.style.fontSize = '18px';
+            btn.style.cursor = 'pointer';
+            btn.style.border = '2px solid rgba(0,0,0,0.2)';
+            btn.style.borderRadius = '4px';
+
+            btn.onclick = function() {
+                clearMapMarkers();
+                document.getElementById('distance').value = '';
+                showNotification('🧹 Marcadores removidos do mapa.', 'info');
+            };
+
+            return btn;
+        }
+    });
+
+    new ClearControl({ position: 'topleft' }).addTo(map);
 }
 
 /**
- * Obtém coordenadas atuais dos marcadores
- * @returns {Object} {origin: [lat, lng], destination: [lat, lng]}
+ * Inicialização completa do sistema de mapas
  */
-function getMarkerCoordinates() {
-    const result = {};
-    
-    if (originMarker) {
-        const pos = originMarker.getLatLng();
-        result.origin = [pos.lat, pos.lng];
-    }
-    
-    if (destinationMarker) {
-        const pos = destinationMarker.getLatLng();
-        result.destination = [pos.lat, pos.lng];
-    }
-    
-    return result;
-}
-
-/**
- * Centraliza mapa em coordenadas específicas
- * @param {Array} coordinates - [latitude, longitude]
- * @param {Number} zoom - Nível de zoom
- */
-function centerMap(coordinates, zoom = 10) {
-    if (map) {
-        map.setView(coordinates, zoom);
-    }
-}
-
-/**
- * Adiciona evento de clique no mapa
- * @param {Function} callback - Função a ser chamada no clique
- */
-function onMapClick(callback) {
-    if (map) {
-        map.on('click', function(e) {
-            callback([e.latlng.lat, e.latlng.lng]);
-        });
-    }
-}
-
-/**
- * Remove mapa da memória
- */
-function destroyMap() {
-    if (map) {
-        map.remove();
-        map = null;
-        originMarker = null;
-        destinationMarker = null;
-        routeLine = null;
-    }
-}
-
-// Exportar funções para uso global
-if (typeof module !== 'undefined' && module.exports) {
-    module.exports = {
-        initializeMap,
-        setOriginMarker,
-        setDestinationMarker,
-        updateRoute,
-        calculateDistance,
-        setRoute,
-        clearMap,
-        addMultipleMarkers,
-        getMarkerCoordinates,
-        centerMap,
-        onMapClick,
-        destroyMap
-    };
+function initializeMapSystem() {
+    initMap();
+    addMapControls();
 }
