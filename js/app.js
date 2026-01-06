@@ -15,9 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Preenche dropdowns de cidades
     populateCitySelects();
     
-    // Inicializa mapa se disponível
-    if (typeof initMap === 'function') {
+    // Inicializa sistema de mapas
+    if (typeof initializeMapSystem === 'function') {
+        initializeMapSystem();
+        console.log('✅ Sistema de mapas inicializado');
+    } else if (typeof initMap === 'function') {
         initMap();
+        console.log('✅ Mapa inicializado');
     }
 });
 
@@ -56,6 +60,9 @@ function setupEventListeners() {
         destinationSelect.addEventListener('change', updateRoute);
     }
     
+    // Botões do mapa interativo
+    setupMapButtons();
+    
     // Limpar histórico
     const clearHistoryBtn = document.getElementById('clearHistory');
     if (clearHistoryBtn) {
@@ -78,6 +85,58 @@ function setupEventListeners() {
     if (saveHistoryBtn) {
         saveHistoryBtn.addEventListener('click', () => {
             showNotification('Cálculo salvo no histórico!', 'success');
+        });
+    }
+}
+
+/**
+ * Configura botões de controle do mapa interativo
+ */
+function setupMapButtons() {
+    const showMapBtn = document.getElementById('showMap');
+    const closeMapBtn = document.getElementById('closeMap');
+    const mapContainer = document.getElementById('mapContainer');
+    
+    // Botão para mostrar o mapa
+    if (showMapBtn && mapContainer) {
+        showMapBtn.addEventListener('click', () => {
+            mapContainer.style.display = 'block';
+            showMapBtn.style.display = 'none';
+            
+            // Atualiza tamanho do mapa após exibição
+            if (typeof map !== 'undefined' && map) {
+                setTimeout(() => {
+                    map.invalidateSize();
+                    
+                    // Marca cidades se a função existir
+                    if (typeof plotCitiesOnMap === 'function' && typeof CITIES !== 'undefined') {
+                        const citiesArray = Object.entries(CITIES).map(([id, data]) => ({
+                            id,
+                            name: data.name,
+                            lat: data.lat,
+                            lng: data.lng
+                        }));
+                        plotCitiesOnMap(citiesArray);
+                    }
+                }, 100);
+            }
+            
+            showNotification('🗺️ Mapa ativado! Clique para marcar origem e destino.', 'info');
+        });
+    }
+    
+    // Botão para fechar o mapa
+    if (closeMapBtn && mapContainer && showMapBtn) {
+        closeMapBtn.addEventListener('click', () => {
+            mapContainer.style.display = 'none';
+            showMapBtn.style.display = 'block';
+            
+            // Limpa marcadores ao fechar
+            if (typeof clearMapMarkers === 'function') {
+                clearMapMarkers();
+            }
+            
+            showNotification('🗺️ Mapa fechado.', 'info');
         });
     }
 }
@@ -142,9 +201,38 @@ function updateRoute() {
         }
     }
     
-    // Atualiza mapa se disponível
-    if (typeof updateMapRoute === 'function') {
-        updateMapRoute(originId, destinationId);
+    // Atualiza mapa se disponível e visível
+    const mapContainer = document.getElementById('mapContainer');
+    if (mapContainer && mapContainer.style.display === 'block') {
+        updateMapWithSelectedCities(originId, destinationId);
+    }
+}
+
+/**
+ * Atualiza o mapa com as cidades selecionadas
+ */
+function updateMapWithSelectedCities(originId, destinationId) {
+    if (typeof CITIES === 'undefined' || !originId || !destinationId) return;
+    
+    const origin = CITIES[originId];
+    const destination = CITIES[destinationId];
+    
+    if (origin && destination) {
+        // Limpa marcadores anteriores
+        if (typeof clearMapMarkers === 'function') {
+            clearMapMarkers();
+        }
+        
+        // Define novos marcadores
+        if (typeof setOriginMarker === 'function' && typeof setDestinationMarker === 'function') {
+            setOriginMarker(origin.lat, origin.lng);
+            setDestinationMarker(destination.lat, destination.lng);
+            
+            // Calcula distância e desenha rota
+            if (typeof calculateDistanceFromMarkers === 'function') {
+                calculateDistanceFromMarkers();
+            }
+        }
     }
 }
 
@@ -236,7 +324,7 @@ function showNotification(message, type = 'info') {
         top: 20px;
         right: 20px;
         padding: 15px 20px;
-        background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#ff9800' : '#2196F3'};
+        background: ${type === 'success' ? '#4CAF50' : type === 'warning' ? '#ff9800' : type === 'error' ? '#F44336' : '#2196F3'};
         color: white;
         border-radius: 8px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -244,6 +332,7 @@ function showNotification(message, type = 'info') {
         animation: slideIn 0.3s ease;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
         font-size: 14px;
+        max-width: 350px;
     `;
     
     document.body.appendChild(notification);
@@ -302,3 +391,5 @@ style.textContent = `
     }
 `;
 document.head.appendChild(style);
+
+console.log('✅ App.js carregado completamente');
