@@ -10,7 +10,7 @@
 
 **Transformando consciência ambiental em ações sustentáveis**
 
-[✨ Demo Online](https://celloweb-ai.github.io/calculadora-co2-transporte-br/) • [🚀 Funcionalidades](#-funcionalidades) • [🛠️ Tecnologias](#%EF%B8%8F-tecnologias-utilizadas) • [📚 Como Usar](#-como-usar)
+[✨ Demo Online](https://celloweb-ai.github.io/Calculadora_CO2_Transporte_BR/) • [🚀 Funcionalidades](#-funcionalidades) • [🛠️ Tecnologias](#%EF%B8%8F-tecnologias-utilizadas) • [📚 Como Usar](#-como-usar)
 
 </div>
 
