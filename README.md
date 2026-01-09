@@ -99,7 +99,8 @@ A **Calculadora EcoTransporte Brasil** é uma aplicação web interativa que per
 - **Performance**: Carregamento otimizado e execução eficiente
 - **Acessibilidade**: ARIA labels e navegação por teclado
 - **UX Intuitiva**: Fluxos claros e feedback imediato
-- **Zero Dependências**: Funciona diretamente no navegador
+- **Sem build/instalação local**: Dependências via CDN e execução direta no navegador
+- **CDN para bibliotecas**: Chart.js e Leaflet são carregados diretamente do CDN
 
 ## 📚 Estrutura do Projeto
 
