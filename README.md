@@ -291,7 +291,6 @@ mesclar, publicar, distribuir, sublicenciar e/ou vender cópias do software.
 
 - 🐙 GitHub: [@celloweb-ai](https://github.com/celloweb-ai)
 - 💔 LinkedIn: [marcusvasconcellos](https://www.linkedin.com/in/marcusvasconcellos)
-- 💼 Empresa: [@Prio3](https://github.com/Prio3)
 - 📧 Email: marcus@vasconcellos.net.br
 - 📍 Localização: Rio de Janeiro, Brasil
 
