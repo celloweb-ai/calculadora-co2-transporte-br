@@ -136,7 +136,7 @@ Os valores de emissão de CO₂ são baseados em fontes oficiais e dados brasile
 | Transporte | Emissão (g CO₂/km) | Sustentabilidade | Fonte |
 |------------|---------------------|------------------|-------|
 | 🚴 Bicicleta | **0** | 🌿 Muito Alto | Zero emissões |
-| 🔋 Carro Elétrico | **22** | 🌿 Muito Alto | Mix energético BR (hidreletricidade) |
+| 🔋 Carro Elétrico | **22** | 🌿 Muito Alto | Mix energético BR (hidrelétricidade) |
 | 🚆 Trem/Metrô | **35** | 🌿 Alto | Transporte elétrico de massa |
 | 🌱 Carro Híbrido | **51** | 🌱 Alto | Motor duplo (elétrico + combustão) |
 | 🚌 Ônibus | **75** | 🌱 Médio | Transporte coletivo (diesel) |

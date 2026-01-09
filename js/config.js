@@ -27,7 +27,7 @@ const CO2_EMISSIONS = {
         name: 'Carro Elétrico',
         color: '#8BC34A',
         sustainability: 'muito_alto',
-        description: 'Considera mix energético brasileiro (hidreletricidade)'
+        description: 'Considera mix energético brasileiro (hidrelétricidade)'
     },
     
     // Transporte público eficiente
