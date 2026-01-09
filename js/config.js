@@ -199,6 +199,17 @@ const UTILS = {
     }
 };
 
+// Exporta constantes para testes em ambiente Node.js
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        CO2_EMISSIONS,
+        ENVIRONMENTAL_EQUIVALENTS,
+        CONFIG,
+        DATA_SOURCES,
+        UTILS
+    };
+}
+
 console.log('✅ Config.js carregado - Versão', DATA_SOURCES.version);
 console.log('📅 Última atualização dos dados:', DATA_SOURCES.lastUpdate);
 console.log('🚗 Modais de transporte disponíveis:', Object.keys(CO2_EMISSIONS).length);
