@@ -1,0 +1,18 @@
+{
+  "name": "calculadora-co2-transporte-br",
+  "version": "1.0.0",
+  "description": "Calculadora EcoTransporte Brasil - Emissões de CO2",
+  "type": "commonjs",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testMatch": [
+      "**/tests/**/*.test.js"
+    ]
+  }
+}

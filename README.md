@@ -208,6 +208,15 @@ python -m http.server 8000
 - **Mapa Interativo**: Arraste os marcadores para ajustar distâncias
 - **Clique nas Cidades**: Selecione origem e destino clicando diretamente no mapa
 
+## 🧪 Testes
+
+Para executar os testes automatizados com Jest:
+
+```bash
+npm install
+npm test
+```
+
 ## 🌎 Deploy
 
 ### 💚 GitHub Pages (Recomendado)

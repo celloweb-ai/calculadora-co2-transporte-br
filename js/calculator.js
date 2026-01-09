@@ -325,3 +325,16 @@ function validateCalculationParams(params) {
 }
 
 console.log('✅ Calculator.js carregado - Funções de cálculo disponíveis');
+
+// Exporta funções para testes em ambiente Node.js
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        calculateEmissions,
+        compareAllTransports,
+        calculateEnvironmentalEquivalents,
+        getImpactLevel,
+        generateRecommendations,
+        getSustainabilityRanking,
+        validateCalculationParams
+    };
+}
