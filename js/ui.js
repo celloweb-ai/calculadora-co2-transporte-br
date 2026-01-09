@@ -82,16 +82,22 @@ function updateMainResults(result) {
  */
 function updateRanking(result) {
     const rankingElement = document.getElementById('sustainabilityRanking');
-    if (!rankingElement || typeof TRANSPORT_EMISSIONS === 'undefined') return;
+    if (!rankingElement || typeof CO2_EMISSIONS === 'undefined') return;
     
     // Calcula emissão para cada transporte
     const rankings = [];
-    for (const [transport, emission] of Object.entries(TRANSPORT_EMISSIONS)) {
-        const transportEmission = (emission * result.distance * (result.roundTrip ? 2 : 1)) / result.passengers;
+    const totalDistance = result.totalDistance || (result.distance * (result.roundTrip ? 2 : 1) * result.frequency);
+    for (const [transport, emission] of Object.entries(CO2_EMISSIONS)) {
+        let transportEmission = emission.rate * totalDistance;
+
+        if (transport.includes('carro') && result.passengers > 1) {
+            transportEmission = transportEmission / result.passengers;
+        }
+
         rankings.push({
             transport,
             emission: transportEmission,
-            label: getTransportLabel(transport)
+            label: emission.name || getTransportLabel(transport)
         });
     }
     
